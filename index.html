@@ -4,173 +4,292 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hayırlı Bayramlar</title>
-    <!-- Gelişmiş altın yaldız/konfeti efekti için -->
+    <!-- Konfeti Efekti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <!-- Şık ve geleneksel fontlar -->
+    <!-- Şık Fontlar -->
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Cormorant+Garamond:ital,wght@0,500;1,600&display=swap" rel="stylesheet">
     
     <style>
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #0f2b1d 0%, #1e4530 50%, #0d1e15 100%);
+            /* Gelişmiş, dokulu zümrüt yeşili arka plan */
+            background-color: #0b1f15;
+            background-image: radial-gradient(circle at center, #18402b 0%, #0b1f15 100%);
             display: flex; justify-content: center; align-items: center;
             font-family: 'Cormorant Garamond', serif;
             overflow: hidden;
+            color: #fff;
         }
 
-        /* Arka planda parlayan sabit yıldızlar */
-        .stars-bg {
-            position: absolute; width: 100%; height: 100%; z-index: 1; pointer-events: none;
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(255,215,0,0.1) 2%, transparent 10%),
-                radial-gradient(circle at 85% 30%, rgba(255,215,0,0.1) 2%, transparent 10%);
+        /* --- ARKA PLAN SÜSLEMELERİ --- */
+        
+        /* 1. Altın Hilal */
+        .crescent-moon {
+            position: absolute;
+            top: 8%; left: 10%;
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            box-shadow: 15px 15px 0 0 #D4AF37;
+            animation: glow 3s infinite alternate;
+            z-index: 1;
         }
 
-        /* Ana Kart Taşıyıcısı */
-        .card-container {
+        /* 2. Sallanan Kandiller */
+        .lantern {
+            position: absolute;
+            top: -10px;
+            font-size: 60px;
+            transform-origin: top center;
+            animation: swing 4s ease-in-out infinite;
+            z-index: 2;
+            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.8));
+        }
+        .lantern-1 { right: 15%; animation-delay: 0s; }
+        .lantern-2 { right: 30%; animation-delay: 2s; font-size: 45px; }
+        
+        @keyframes swing {
+            0% { transform: rotate(-8deg); }
+            50% { transform: rotate(8deg); }
+            100% { transform: rotate(-8deg); }
+        }
+
+        /* 3. Uçuşan Işık Zerreleri (Ateşböcekleri) */
+        .particles-container {
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; z-index: 1;
+        }
+        .particle {
+            position: absolute; bottom: -10px;
+            width: 4px; height: 4px;
+            background: #FFD700;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 2px rgba(255, 215, 0, 0.6);
+            animation: floatUp linear infinite;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
+        }
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4)); }
+            to { filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.9)); }
+        }
+
+        /* --- ETKİLEŞİMLİ ALAN (ZARF VE MEKTUP) --- */
+        #interactive-area {
             position: relative;
-            width: 90vw; max-width: 500px;
-            height: 60vh; max-height: 400px;
-            perspective: 1000px;
-            z-index: 5;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* İÇERİK - Açıldığında görünen beyaz asıl kart */
-        .inner-message {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #FDFBF7;
-            border-radius: 8px;
-            border: 2px solid #D4AF37;
-            box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.2), 0 10px 30px rgba(0,0,0,0.5);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            padding: 30px; box-sizing: border-box;
-            text-align: center;
-            opacity: 0; transform: scale(0.9); transition: all 1s ease-in-out;
+        /* Gerçekçi Zarf Tasarımı */
+        .envelope-wrapper {
+            position: relative;
+            width: 320px;
+            height: 220px;
+            cursor: pointer;
+            transition: all 0.5s ease;
         }
-        .card-container.open .inner-message {
-            opacity: 1; transform: scale(1);
-        }
-
-        .inner-message h1 {
-            font-family: 'Cinzel', serif;
-            color: #0f2b1d; font-size: 26px; border-bottom: 2px solid #D4AF37; padding-bottom: 10px; margin-top: 0;
-        }
-
-        .inner-message p {
-            color: #222; font-size: 22px; line-height: 1.6; margin: 20px 0; font-weight: 500;
-        }
-        .inner-message .signature {
-            font-style: italic; color: #8c7323; font-size: 24px; margin-top: 20px; font-weight: 600;
-        }
-
-        /* ÇİFT KAPI / KAPAK Tasarımı */
-        .gate {
-            position: absolute; top: 0; width: 50%; height: 100%;
-            background: url('https://www.transparenttextures.com/patterns/arabesque.png'), #183e29;
-            border: 4px solid #D4AF37; box-sizing: border-box;
-            transition: transform 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 20px rgba(0,0,0,0.6);
-        }
-        .gate-left {
-            left: 0; border-radius: 8px 0 0 8px; border-right: 2px solid #a6841d; transform-origin: left;
-        }
-        .gate-right {
-            right: 0; border-radius: 0 8px 8px 0; border-left: 2px solid #a6841d; transform-origin: right;
+        .envelope-wrapper:hover {
+            transform: translateY(-10px) scale(1.02);
         }
         
-        .gate::after { /* Kapı Kulpları / Motifleri */
-            content: '❁'; color: #D4AF37; font-size: 40px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        .envelope-back {
+            position: absolute; width: 100%; height: 100%;
+            background: #123322;
+            border-radius: 5px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+            border: 1px solid #D4AF37;
+        }
+        
+        .envelope-front {
+            position: absolute; bottom: 0; left: 0;
+            border-left: 160px solid transparent;
+            border-right: 160px solid transparent;
+            border-bottom: 120px solid #1a452e;
+            z-index: 3;
+        }
+        
+        .envelope-flap {
+            position: absolute; top: 0; left: 0;
+            border-left: 160px solid transparent;
+            border-right: 160px solid transparent;
+            border-top: 130px solid #1e5236;
+            z-index: 4;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
         }
 
-        .click-text-container {
-            position: absolute; bottom: 10%; width: 100%; text-align: center;
-            font-family: 'Cinzel', serif; color: #FFD700; z-index: 12; pointer-events: none;
-            text-shadow: 1px 1px 10px rgba(255, 215, 0, 0.5); font-size: 18px;
-            animation: breathe 2s infinite alternate; transition: opacity 0.5s;
+        /* Kırmızı Balmumu Mühür */
+        .wax-seal {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 55px; height: 55px;
+            background: radial-gradient(circle, #b30000 0%, #660000 100%);
+            border-radius: 50%;
+            z-index: 5;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 0 5px rgba(255,255,255,0.3);
+            border: 2px solid #520000;
+            display: flex; justify-content: center; align-items: center;
+            font-family: 'Cinzel', serif; color: #FFD700; font-size: 24px; text-shadow: 1px 1px 2px #000;
+        }
+        .wax-seal::after { content: '🌙'; font-size: 26px; }
+
+        /* Tıklama Yönergesi (Zarfın Altında, Zarf Gidince Bu da Gider) */
+        .click-text {
+            position: absolute;
+            bottom: -60px;
+            width: 100%;
+            text-align: center;
+            font-family: 'Cinzel', serif;
+            color: #FFD700;
+            font-size: 18px;
+            letter-spacing: 1px;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+            animation: pulseText 1.5s infinite alternate;
+        }
+        @keyframes pulseText { from { opacity: 0.5; } to { opacity: 1; } }
+
+        /* Açılan Mektup (İçerik) */
+        .inner-letter {
+            display: none; /* Başlangıçta gizli */
+            background: #FDFBF7;
+            width: 90vw; max-width: 500px;
+            padding: 40px 30px;
+            border-radius: 8px;
+            border: 2px solid #D4AF37;
+            box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.1), 0 20px 60px rgba(0,0,0,0.8);
+            text-align: center;
+            color: #1a452e;
+            position: absolute;
         }
 
-        /* Tıklandığında kapıların yana/geriye doğru açılması */
-        .card-container.open .gate-left {
-            transform: rotateY(-105deg); opacity: 0; box-shadow: none; pointer-events: none;
-        }
-        .card-container.open .gate-right {
-            transform: rotateY(105deg); opacity: 0; box-shadow: none; pointer-events: none;
-        }
-        .card-container.open .click-text-container {
-            opacity: 0;
+        .inner-letter h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 28px;
+            margin-top: 0;
+            border-bottom: 2px solid #D4AF37;
+            padding-bottom: 15px;
+            color: #0b1f15;
         }
 
-        @keyframes breathe { from { opacity: 0.6; transform: scale(0.98); } to { opacity: 1; transform: scale(1.02); } }
+        .inner-letter p {
+            font-size: 22px;
+            line-height: 1.6;
+            margin: 25px 0;
+            font-weight: 500;
+            color: #222;
+        }
+
+        .inner-letter .signature {
+            font-style: italic;
+            color: #8c7323;
+            font-size: 24px;
+            margin-top: 30px;
+            font-weight: 600;
+        }
+
+        /* Mektup Açılma Animasyonu */
+        @keyframes pullOut {
+            0% { opacity: 0; transform: translateY(50px) scale(0.8); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
 
     </style>
 </head>
 <body>
-    <div class="stars-bg"></div>
 
-    <div class="card-container" id="myCard" onclick="openGreeting()">
+    <!-- Arka Plan Süslemeleri -->
+    <div class="crescent-moon"></div>
+    <div class="lantern lantern-1">🏮</div>
+    <div class="lantern lantern-2">🏮</div>
+    <div class="particles-container" id="particles"></div>
+
+    <!-- Etkileşimli Alan -->
+    <div id="interactive-area">
         
-        <!-- Yüzeyde görünen sol ve sağ kapak -->
-        <div class="gate gate-left"></div>
-        <div class="gate gate-right"></div>
-        
-        <div class="click-text-container" id="instruction-text">
-            Bayram Mesajı<br>(Kapağa Dokun)
+        <!-- Zarf -->
+        <div class="envelope-wrapper" id="myEnvelope" onclick="openEnvelope()">
+            <div class="envelope-back"></div>
+            <div class="envelope-front"></div>
+            <div class="envelope-flap"></div>
+            <div class="wax-seal"></div>
+            <div class="click-text">Sana Özel Bir Mesaj<br><span style="font-size: 14px; font-family: 'Cormorant Garamond', serif;">(Mührü Kırmak İçin Dokun)</span></div>
         </div>
 
-        <!-- İÇERİDE ÇIKACAK OLAN KART VE METİNLER -->
-        <div class="inner-message">
+        <!-- İçinden Çıkan Mektup -->
+        <div class="inner-letter" id="myLetter">
             <h1>Hayırlı Bayramlar</h1>
-            
             <p>
                 Ramazan Bayramınız mübarek olsun.<br><br>
                 Sevdiklerinizle birlikte sağlık, huzur ve neşe içinde geçireceğiniz; kalplerin sevgiyle, sofraların bereketle dolduğu nice güzel bayramlar dilerim.
             </p>
-
-            <!-- ADINI ALT SATIRA YAZ -->
             <div class="signature">Ahmet</div>
         </div>
+
     </div>
 
     <script>
+        // Arka Planda Uçuşan Işıklar Üretme
+        const pContainer = document.getElementById('particles');
+        for(let i=0; i<30; i++) {
+            let particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + 'vw';
+            particle.style.animationDuration = (Math.random() * 5 + 5) + 's'; // 5 ile 10 saniye arası
+            particle.style.animationDelay = (Math.random() * 5) + 's';
+            pContainer.appendChild(particle);
+        }
+
         let isOpened = false;
 
-        function openGreeting() {
-            if (isOpened) return; // Birden fazla kez çalışmasını önler
+        function openEnvelope() {
+            if (isOpened) return;
             isOpened = true;
 
-            const card = document.getElementById('myCard');
-            card.classList.add('open');
+            const envelope = document.getElementById('myEnvelope');
+            const letter = document.getElementById('myLetter');
 
-            // Asil bir konfeti patlaması (Altın, Gümüş renklerde ve yıldızlar şeklinde)
+            // 1. Zarfı saydamlaştırıp küçülterek yok et (Yazı da zarfın içinde olduğu için tamamen yok olacak)
+            envelope.style.opacity = '0';
+            envelope.style.transform = 'scale(0.8) translateY(50px)';
+            envelope.style.pointerEvents = 'none';
+
+            // 2. Kısa bir süre sonra zarfı ekrandan tamamen kaldır ve mektubu göster
+            setTimeout(() => {
+                envelope.style.display = 'none';
+                
+                letter.style.display = 'block';
+                letter.style.animation = 'pullOut 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+
+                // 3. Konfeti Patlat (Altın ve Gümüş)
+                fireConfetti();
+            }, 400); // 0.4 saniye bekle
+        }
+
+        function fireConfetti() {
             const duration = 2.5 * 1000;
             const end = Date.now() + duration;
 
             (function frame() {
                 confetti({
-                    particleCount: 5,
-                    angle: 60,
-                    spread: 45,
-                    origin: { x: 0 },
-                    colors: ['#D4AF37', '#FFD700', '#DAA520', '#C0C0C0']
+                    particleCount: 5, angle: 60, spread: 45, origin: { x: 0 },
+                    colors: ['#D4AF37', '#FFD700', '#DAA520', '#FFFFFF']
                 });
                 confetti({
-                    particleCount: 5,
-                    angle: 120,
-                    spread: 45,
-                    origin: { x: 1 },
-                    colors: ['#D4AF37', '#FFD700', '#DAA520', '#C0C0C0']
+                    particleCount: 5, angle: 120, spread: 45, origin: { x: 1 },
+                    colors: ['#D4AF37', '#FFD700', '#DAA520', '#FFFFFF']
                 });
 
                 if (Date.now() < end) {
                     requestAnimationFrame(frame);
                 } else {
+                    // Kapanışta hafif parıltılar
                     confetti({
-                        particleCount: 50,
-                        spread: 100,
-                        origin: { y: 0 },
-                        gravity: 0.2,
-                        ticks: 300,
+                        particleCount: 40, spread: 100, origin: { y: 0.1 }, gravity: 0.3, ticks: 200,
                         colors: ['#D4AF37', '#FFDF00']
                     });
                 }
